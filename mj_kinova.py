@@ -33,6 +33,7 @@ class Kinova_MJ(object):
 		self._sim = MjSim(self._model)
 
 		self._viewer = MjRenderContextOffscreen(self._sim, 0)
+		#self._viewer = MjViewer(self._sim)
 		self._timestep = 0.0001
 		self._sim.model.opt.timestep = self._timestep
 
@@ -49,51 +50,58 @@ class Kinova_MJ(object):
 	def set_step(self, seconds):
 		self._numSteps = seconds / self._timestep
 
-	def run_mujoco(self,thetas = [2, 1, 0.1, 0.75, 4.62, 4.48, 4.88, 0.0, 0.0, 0.0],fl=0):
+	def run_mujoco(self,thetas = [2, 1, 0.1, 0.75, 4.62, 4.48, 4.88, 0.0, 0.0, 0.0]):
 		self._sim.data.qpos[0:10] = thetas[:] 		#first 10 - first 7 are joint angles, next 3 are finger pose
 		self._sim.forward()
-		if fl ==0:
-			self._viewer.render(640, 480, 0)
-			img = np.asarray(self._viewer.read_pixels(640, 480, depth=False)[::-1, :, :], dtype=np.uint8)
-		else:
-			self._viewer.render(640, 480, -1)
-			img = np.asarray(self._viewer.read_pixels(640, 480, depth=False)[::-1, :, :], dtype=np.uint8)
+		#if fl ==0:
+		#	self._viewer.render(640, 480, 0)
+		#	img = np.asarray(self._viewer.read_pixels(640, 480, depth=False)[::-1, :, :], dtype=np.uint8)
+		#else:
+		#	self._viewer.render(640, 480, -1)
+		#	img = np.asarray(self._viewer.read_pixels(640, 480, depth=False)[::-1, :, :], dtype=np.uint8)
+
+	#img = self._sim.render(width=640, height=480, camera_name="camera2")
+
+		self._viewer.render(1920, 1080, 0)
+		img = np.asarray(self._viewer.read_pixels(1920, 1080, depth=False)[::-1, :, :], dtype=np.uint8)
+		#img = self._sim.render(width=640, height=480, camera_name="camera2")
 		return img
 
-	def init_camera(self):
-		self._viewer.cam.lookat[:] = [-0.05348492, - 0.46381618, - 0.01835867]
-		self._viewer.cam.azimuth = 172.29128760000003
-		self._viewer.cam.elevation = -89.0
-		self._viewer.cam.distance = 0.7788944976208755
+	#def init_camera(self):
+	#	self._viewer.cam.lookat[:] = [-0.05348492, - 0.46381618, - 0.01835867]
+	#	self._viewer.cam.azimuth = 172.29128760000003
+	#	self._viewer.cam.elevation = -89.0
+	#	self._viewer.cam.distance = 0.7788944976208755
 
-	def reset_camera(self,input):
-		self._viewer.cam.lookat[:] = input[0]
-		self._viewer.cam.azimuth = input[1]
-		self._viewer.cam.elevation = input[2]
-		self._viewer.cam.distance = input[3]
+	#def reset_camera(self,input):
+	#	self._viewer.cam.lookat[:] = input[0]
+	#	self._viewer.cam.azimuth = input[1]
+	#	self._viewer.cam.elevation = input[2]
+	#	self._viewer.cam.distance = input[3]
 
-	def moving_camera(self,d_position = [],d_rotation = []):
+	#def moving_camera(self,d_position = [],d_rotation = []):
 		# Make the free camera look at the scene
-		d_position = np.array(d_position)
-		d_rotation = np.array(d_rotation)
-		if len(d_position) == 3:
-			dx = d_position[0]/100
-			dy = d_position[1]/100
-			dz = d_position[2]/100
-			action = const.MOUSE_MOVE_H
-			self._viewer.move_camera(action, dx, dy)
-			action = const.MOUSE_MOVE_V
-			self._viewer.move_camera(action, dx, dy)
-			action = const.MOUSE_ZOOM
-			self._viewer.move_camera(action, 0, dz)
+	#	d_position = np.array(d_position)
+	#	d_rotation = np.array(d_rotation)
+	#	if len(d_position) == 3:
+	#		dx = d_position[0]/100
+	#		dy = d_position[1]/100
+	#		dz = d_position[2]/100
+	#		action = const.MOUSE_MOVE_H
+	#		self._viewer.move_camera(action, dx, dy)
+	#		action = const.MOUSE_MOVE_V
+	#		action = const.MOUSE_ZOOM
+	#		self._viewer.move_camera(action, 0, dz)
 
-		if len(d_rotation) == 2:
-			drx = d_rotation[0]
-			dry = d_rotation[1]
-			action = const.MOUSE_ROTATE_H
-			self._viewer.move_camera(action, drx, dry)
-			action = const.MOUSE_ROTATE_V
-			self._viewer.move_camera(action, drx, dry)
+	#	if len(d_rotation) == 2:
+	#		drx = d_rotation[0]
+	#		dry = d_rotation[1]
+	#		action = const.MOUSE_ROTATE_H
+	#		self._viewer.move_camera(action, drx, dry)
+	#		action = const.MOUSE_ROTATE_V
+	#		self._viewer.move_camera(action, drx, dry)
+
+
 
 
 def degreetorad(degree):
@@ -115,6 +123,22 @@ def read_ang_data_v(filename): #for the data form2
 	data = [[float(i) for i in line.split(',')] for line in angle_data.split()]
 	return data
 
+def corp_margin(img):
+	img2 = img.sum(axis=2)
+	(row, col) = img2.shape
+	out_image = img.copy()
+	row_top = 0
+	pix_ma = img2.sum(axis=1)[0]
+	for sr in range(0, row):
+		if img2.sum(axis=1)[sr] > pix_ma:
+			row_top = sr + 1
+			break
+	cutting = img[0:row_top + 1].copy()
+	new_img = img[row_top:-1]
+	out_image[0:row - row_top - 1] = new_img.copy()
+	out_image[row - row_top - 2:-1] = cutting.copy()
+	return out_image
+
 ################
 ## this part is Image dilation
 ## the purpose of dilation is to reduce the nose of the background for higher efficiency
@@ -123,6 +147,7 @@ def read_ang_data_v(filename): #for the data form2
 def img_dia(target,itr,ori_mask,kernel,kernel2 = None,save_fl = 0):
     if type(kernel2)== type(kernel):
         kernel2 = kernel
+        print("done")
     #img_dir = target + "/img.png"
     img_r_dir = target + "/real{}.jpg".format(itr)
     #plt.imsave(img_dir, ori_mask)
@@ -133,6 +158,8 @@ def img_dia(target,itr,ori_mask,kernel,kernel2 = None,save_fl = 0):
         target = "output"
         plt.imsave(target +"/img_dila.png", img_dilation)
         plt.imsave(target+"/real_img_dila.png", img_r_dilation)
+
+    print("img_dia_out")
     return img_dilation,img_r_dilation,img_real
 
 ###################
@@ -143,7 +170,6 @@ def RGB2YUV(target,mask,real,save_fl = 0):
     mask_out = cv2.cvtColor(mask, cv2.COLOR_BGR2YUV)
     real_out = cv2.cvtColor(real, cv2.COLOR_BGR2YUV)
     if save_fl == 1:
-        target = "output"
         plt.imsave(target+"/mask_YUV.png", mask_out)
         plt.imsave(target+"/real_YUV.png", real_out)
     return mask_out, real_out
@@ -166,39 +192,43 @@ def pixel_cal(mask):
 def Kmeanclus(target,mask,real,parK = 5,save_fl = 0):
 	Z_mask = np.float32(mask.reshape((-1, 3)))
 	Z_real = np.float32(real.reshape((-1, 3)))
-
+	h, w, _ = real.shape
 	criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
 	K = parK # modifies]d
 	ret_real, label_real, center_real = cv2.kmeans(Z_real, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 	ret_mask, label_mask, center_mask = cv2.kmeans(Z_mask, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-	center_real = np.uint8(center_real)
+	#center_real = np.uint8(center_real)
     #1023
-	label_real_mod = label_real.reshape(480,640)
-	label_real_out = label_real_mod
-	for i in range(480):
-		for j in range(118):
-			label_real_mod[i][j] = label_real_mod[10][118]
-
-	res_real_mod = center_real[label_real_mod]
-	center_mask = np.uint8(center_mask)
-	res_mask = center_mask[label_mask.flatten()]
-	res2_mask = res_mask.reshape((mask.shape))
+	#res_real = center_real[label_real.flatten()]
+	label_real_out = label_real.reshape(h, w)
+	#label_real_out = label_real_mod
+	#for i in range(h):
+	#	for j in range(118):
+	#		label_real_mod[i][j] = label_real_mod[10][118]
+	#res_real_mod = center_real[label_real_mod]
+	#center_mask = np.uint8(center_mask)
+	#res_mask = center_mask[label_mask.flatten()]
+	#res2_mask = res_mask.reshape(h, w)
+	label_mask_out = label_mask.reshape(h, w)
 	if save_fl == 1:
-		target = "output"
-		plt.imsave(target+"/real_K"+str(K)+"_mod.png", res_real_mod)
-		plt.imsave(target+"/mask_K"+str(K)+".png", res2_mask)
-
-	label_mask_out = label_mask.reshape(480, 640)
-
+		plt.imsave(target+"/real_K"+str(K)+"_mod.png", label_real_out)
+		plt.imsave(target+"/mask_K"+str(K)+".png", label_mask_out)
+	print("Kmean_out")
 	return label_mask_out,label_real_out
 
 #117 584
-
-def cluster_matching_mask_g(target, mask_l,real_l,K,itr,save_fl = 0):
+######
+#Before Using this section remember to mark the valid area of the cluster matching
+######
+#2020/12/2 valid zone for new set of video: 305 1570
+######
+def cluster_matching_mask(target, mask_l,real_l,K,itr,save_fl = 0):
 	pixel_cal_r = np.ones(K,)
 	pixel_cal_m = np.ones(K,)
-	for i in range(480):
-		for j in range(117, 585):
+	h,w = mask_l.shape
+	valid_z1, valid_z2 = 305, 1571
+	for i in range(h):
+		for j in range(valid_z1, valid_z2): # valid zone
 			pixel_cal_m[mask_l[i][j]] += 1
 			pixel_cal_r[real_l[i][j]] += 1
 
@@ -219,8 +249,8 @@ def cluster_matching_mask_g(target, mask_l,real_l,K,itr,save_fl = 0):
 	out_label = np.zeros(real_l.shape,np.uint8)
 
 	for th in range(threshold):
-		for i in range(480):
-			for j in range(117, 585):
+		for i in range(h):
+			for j in range(valid_z1, valid_z2):
 				if (real_l[i][j] in or_list) and out_label[i][j] == 0:
 					k = random()
 					if k < 1:
@@ -235,9 +265,55 @@ def cluster_matching_mask_g(target, mask_l,real_l,K,itr,save_fl = 0):
 					out_mask[i][j] = [0, 0, 0]
 					out_label[i][j] = 0
 	if save_fl == 1:
-		target = "output"
 		plt.imsave(target + "/mask_out_K" + str(itr) + ".png", out_mask)
+	print("Matching_out")
+	return out_label
 
+def cluster_matching_mask_g(target, mask_l,real_l,K,itr,save_fl = 0):
+	pixel_cal_r = np.ones(K,)
+	pixel_cal_m = np.ones(K,)
+	h,w = mask_l.shape
+	valid_z1, valid_z2 = 305, 1571
+	for i in range(h):
+		for j in range(valid_z1, valid_z2): # valid zone
+			pixel_cal_m[mask_l[i][j]] += 1
+			pixel_cal_r[real_l[i][j]] += 1
+
+	or_m = np.argsort(pixel_cal_m)
+	or_r = np.argsort(pixel_cal_r)
+	sim_arm_pix = 0
+	for i in range(len(or_m)-1):
+		sim_arm_pix += pixel_cal_m[or_m[i]]
+
+	real_arm_pix = 0
+	diff_l = []
+	for i in range(len(or_r)):
+		real_arm_pix += pixel_cal_r[or_r[i]]
+		diff_l.append(abs(real_arm_pix - sim_arm_pix))
+	threshold = diff_l.index(min(diff_l))+1
+	or_list = or_r[0:threshold]
+	out_mask = np.zeros([mask_l.shape[0],mask_l.shape[1],3],np.uint8)
+	out_label = np.zeros(real_l.shape,np.uint8)
+
+	for th in range(threshold):
+		for i in range(h):
+			for j in range(valid_z1, valid_z2):
+				if (real_l[i][j] in or_list) and out_label[i][j] == 0:
+					k = random()
+					if k < 1:
+						out_mask[i][j] = [255,255,255]
+						out_label[i][j] = 255
+					else:
+						out_mask[i][j] = [0,0,0]
+						out_label[i][j] = 0
+				elif out_label[i][j] != 0:
+					continue
+				else:
+					out_mask[i][j] = [0, 0, 0]
+					out_label[i][j] = 0
+	if save_fl == 1:
+		plt.imsave(target + "/mask_out_K" + str(itr) + ".png", out_mask)
+	print("Matching_out")
 	return out_label
 
 
@@ -280,10 +356,10 @@ def grab_cuting(target,K,sim_img,real,nwmask=[],save_fl = 0):
 	mask = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
 	img = img * mask[:, :, np.newaxis]
 	if save_fl ==1:
-		target = "output"
 		plt.imsave(target + "/Grab" + str(K) + ".jpg", img)
 		plt.imsave(target + "/Grab_mask" + str(K) + ".jpg", mask)
 		plt.imsave(target + "/Grab_mjmask" + str(K) + ".jpg", mj_seg)
+	print("Grab_out")
 	return mask, mj_seg
 
 def cal_score(inmask,insimu):
@@ -306,7 +382,6 @@ def cal_score(inmask,insimu):
 def overlap_image(realim,mj,realgray,i,target):
 	h, w = realim.shape
 	combine_mask = np.zeros((h, w, 3), np.uint8)
-
 	for ii in range(h):
 		for j in range(w):
 			if realim[ii][j] == 1:
@@ -314,78 +389,88 @@ def overlap_image(realim,mj,realgray,i,target):
 			if mj[ii][j] == 0:
 				combine_mask[ii][j][1] = 255
 			combine_mask[ii][j][2] = realgray[ii][j]
-
-	cv2.imshow('My Image2', combine_mask)
+	#cv2.imshow('My Image2', combine_mask)
 	plt.imsave(target + "/contour{}.jpg".format(i), combine_mask)
+	print("Overlap_out")
 
-def seg_process(d_pos,d_rot, filename, sim,target, imag_save_fl = 0,rotation_fl =0,indata=[]):
+#def seg_process(d_pos,d_rot, filename, sim,target, imag_save_fl = 0,rotation_fl =0,indata=[]):
+def seg_process(filename, sim, input="real_image" ,output = "output2", imag_save_fl=0):
 	#print(indata)
-	if len(indata) != 0:
-		sim.reset_camera(indata)
-	bb = read_ang_data_v(filename)
-	FING1 = 70
-	FING2 = 72
-	FING3 = 73
-	d_p = [] # x - right, y + down, z + zoom in
-	d_rp = []
-	if rotation_fl == 1:
-		d_rp = d_rot
-		sim.moving_camera(d_p, d_rp)
-	elif rotation_fl == 0:
-		d_p = d_pos
-		sim.moving_camera(d_p, d_rp)
+	#if len(indata) != 0:
+	#	sim.reset_camera(indata)
+	#bb = read_ang_data_v(filename)
+	data = read_ang_data_v(filename)
+	#FING1 = 70
+	#FING2 = 72
+	#FING3 = 73
+	#d_p = [] # x - right, y + down, z + zoom in
+	#d_rp = []
+	#if rotation_fl == 1:
+	#	d_rp = d_rot
+	#	sim.moving_camera(d_p, d_rp)
+	#elif rotation_fl == 0:
+	#	d_p = d_pos
+	#	sim.moving_camera(d_p, d_rp)
 
 	#d_p = [-0.01, 0.01, 0.01]
 	score = []
 
-	for i in range(len(bb)):
-		ang = bb[i].copy()
-		ang.append(FING1)
-		ang.append(FING2)
-		ang.append(FING3)
-		ang = np.array(ang) / (180 / math.pi)
-		ang[0] = -1 * ang[0] + math.pi / 2
-		ang[1] = math.pi - ang[1]  # -1+pi
-		ang[2] = ang[2]
-		ang[3] = ang[3]
-		ang[4] = ang[4]
-		ang[5] = ang[5]
-		ang[6] = ang[6]
-		ori_mask = sim.run_mujoco(ang, fl=1)
+	for i in range(1):
+		k = i * 2
+		#ang = bb[i].copy()
+		#ang.append(FING1)
+		#ang.append(FING2)
+		#ang.append(FING3)
+		#ang = np.array(ang) / (180 / math.pi)
+		#ang[0] = -1 * ang[0] + math.pi / 2
+		#ang[1] = math.pi - ang[1]  # -1+pi
+		#ang[2] = ang[2]
+		#ang[3] = ang[3]
+		#ang[4] = ang[4]
+		#ang[5] = ang[5]
+		#ang[6] = ang[6]
+
+		data[k][0] = -data[k][0] + math.pi + 0.12
+		data[k][1] = - data[k][1] + math.pi
+		data[k][4] = data[k][4] - 0.1
+		ori_mask = sim.run_mujoco(data[k])
+		ori_mask = corp_margin(ori_mask)
 		kernel = np.ones((3, 3), np.uint8)
 		kernel2 = np.ones((3, 3), np.uint8)
-		mask_dia, real_dia, real_data = img_dia(target, i, ori_mask, kernel, kernel2)
-		mask_yuv, real_yuv = RGB2YUV(target, mask_dia, real_dia)
-		mask_l, real_l = Kmeanclus(target, mask_yuv, real_yuv, 4)
-		grab_mask = cluster_matching_mask_g(target, mask_l, real_l, 4, i)
-		realimg = cv2.imread(target + '/real{}.jpg'.format(i))
-		realim, mj = grab_cuting(target, i, ori_mask,realimg,nwmask=grab_mask,save_fl = 1)
+		mask_dia, real_dia, realimg = img_dia(input, i+1, ori_mask, kernel, kernel2,save_fl = 1)
+		mask_yuv, real_yuv = RGB2YUV(output, mask_dia, real_dia,save_fl = 1)
+		mask_l, real_l = Kmeanclus(output, mask_yuv, real_yuv, 4,save_fl = 1)
+		grab_mask = cluster_matching_mask_g(output, mask_l, real_l, 4, i,save_fl = 1)
+		#realimg = cv2.imread(input + '/real{}.jpg'.format(i))
+		realim, mj = grab_cuting(output, i, ori_mask,realimg,nwmask=grab_mask,save_fl = 1)
 		realgray = cv2.cvtColor(realimg, cv2.COLOR_BGR2GRAY)
 		if imag_save_fl == 1:
-			overlap_image(realim, mj, realgray, i,"output")
+			overlap_image(realim, mj, realgray, i,output)
 		score.append(cal_score(realim, mj))
 	score_m = sum(score) / len(score)
-	print(score,score_m,d_pos,d_rot)
+	#print(score,score_m,d_pos,d_rot)
 
-	print(sim._viewer.cam.lookat[:].copy())
-	print(sim._viewer.cam.azimuth)
-	print(sim._viewer.cam.elevation)
-	print(sim._viewer.cam.distance)
+	#print(sim._viewer.cam.lookat[:].copy())
+	#print(sim._viewer.cam.azimuth)
+	#print(sim._viewer.cam.elevation)
+	#print(sim._viewer.cam.distance)
 
-	return score_m*-1
+	return 0#score_m*-1
 
 
-def optmize_passing_func(input, filename, sim,target, rotationfl,i_fl):
-	if rotationfl == True:
-		return seg_process([], input, filename, sim, target, imag_save_fl=0, rotation_fl=1,indata=i_fl)
-	else:
-		return seg_process(input, [], filename, sim, target, imag_save_fl=0, rotation_fl=0,indata=i_fl)
+#def optmize_passing_func(input, filename, sim,target, rotationfl,i_fl):
+def optmize_passing_func(filename, sim):
+	#if rotationfl == True:
+	#	return seg_process([], input, filename, sim, target, imag_save_fl=0, rotation_fl=1,indata=i_fl)
+	#else:
+	#	return seg_process(input, [], filename, sim, target, imag_save_fl=0, rotation_fl=0,indata=i_fl)
+	return seg_process(filename, sim)
 
 
 def opt_main():
 	sim = Kinova_MJ()
-	sim.init_camera()
-	sim.run_mujoco(fl=1)
+	#sim.init_camera()
+	#sim.run_mujoco(fl=1)
 	#d_pos_rot = [0, 0, 0.03, 0, 0]
 	target = "testdata3"
 	#filename = target+"/angle_data.txt"
@@ -423,19 +508,20 @@ def opt_main():
 
 def manu_main(angle_data):
 	sim = Kinova_MJ()
-	sim.init_camera()
-	sim.run_mujoco(fl=1)
+	#sim.init_camera()
+	#sim.run_mujoco(fl=1)
 	# d_pos_rot = [0, 0, 0.03, 0, 0]
 	real_in = "real_image"
 	filename = angle_data
+
 	print("working...")
 	#print(target)
 	# d_pos_rot = [-0, 0, 0,0,0] # x - up, y + left, z + zoom in (hand)
-	resetin = []
-	resetin.append(sim._viewer.cam.lookat[:].copy())
-	resetin.append(sim._viewer.cam.azimuth)
-	resetin.append(sim._viewer.cam.elevation)
-	resetin.append(sim._viewer.cam.distance)
+	#resetin = []
+	#resetin.append(sim._viewer.cam.lookat[:].copy())
+	#resetin.append(sim._viewer.cam.azimuth)
+	#resetin.append(sim._viewer.cam.elevation)
+	#resetin.append(sim._viewer.cam.distance)
 
 	#resetin = []
 	#resetin.append([-0.05814825 - 0.45016306 - 0.01190703])
@@ -458,22 +544,24 @@ def manu_main(angle_data):
 	#log4
 	#d_pos = [-0.95519511,  3.44125577,  1.07168055]
 	#d_rot = [7.02141309, 5.29992549]
-	d_pos = [0,-3,0]
-	d_rot = [0,0]
+	#d_pos = [0,-3,0]
+	#d_rot = [0,0]
 
-	_ = seg_process(d_pos,[], filename, sim,  real_in,rotation_fl =1,imag_save_fl = 1,indata = resetin)
-	score = seg_process([],d_rot, filename, sim, real_in,rotation_fl =2,imag_save_fl = 1,indata = resetin)
+	#_ = seg_process(d_pos,[], filename, sim,  real_in,rotation_fl =1,imag_save_fl = 1,indata = resetin)
+	#score = seg_process([],d_rot, filename, sim, real_in,rotation_fl =2,imag_save_fl = 1,indata = resetin)
+
+	score = seg_process(filename, sim, imag_save_fl=1)
 	print(score)
 
 
 
-def main(angle_data):
-	sim = Kinova_MJ()
-	sim.init_camera()
-	sim.run_mujoco(fl=1)
+#def main(angle_data):
+#	sim = Kinova_MJ()
+#	sim.init_camera()
+#	sim.run_mujoco(fl=1)
 	# d_pos_rot = [0, 0, 0.03, 0, 0]
-	real_in = "real_image"
-	filename = angle_data
+#	real_in = "real_image"
+#	filename = angle_data
 
 	#target = "testdata5"
 	## filename = target+"/angle_data.txt"
@@ -481,17 +569,17 @@ def main(angle_data):
 	print("working...")
 	#print(target)
 	# d_pos_rot = [-0, 0, 0,0,0] # x - up, y + left, z + zoom in (hand)
-	resetin = []
-	resetin.append(sim._viewer.cam.lookat[:].copy())
-	resetin.append(sim._viewer.cam.azimuth)
-	resetin.append(sim._viewer.cam.elevation)
-	resetin.append(sim._viewer.cam.distance)
+#	resetin = []
+#	resetin.append(sim._viewer.cam.lookat[:].copy())
+#	resetin.append(sim._viewer.cam.azimuth)
+#	resetin.append(sim._viewer.cam.elevation)
+#	resetin.append(sim._viewer.cam.distance)
 
-	d_pos = [0, 0, 0]
-	d_rot = [0, 0]
+#	d_pos = [0, 0, 0]
+#	d_rot = [0, 0]
 	#_ = seg_process(d_pos, [], filename, sim, target, rotation_fl=1, imag_save_fl=1, indata=resetin)
-	score = seg_process([], d_rot, filename, sim, real_in, rotation_fl=2, imag_save_fl=1)
-	print(score)
+#	score = seg_process([], d_rot, filename, sim, real_in, rotation_fl=2, imag_save_fl=1)
+#	print(score)
 
 # score = seg_process(d_pos,d_rot, filename, sim,imag_save_fl = 1)
 
@@ -503,13 +591,13 @@ def main(angle_data):
 if __name__ == '__main__':
 
 	a = sys.argv[1]
-	file_path = "output"
+	file_path = "output2"
 	try:
 		os.makedirs(file_path)
 	except FileExistsError:
 		pass
 	print(a)
-	main(a)
+	manu_main(a)
 
 
 

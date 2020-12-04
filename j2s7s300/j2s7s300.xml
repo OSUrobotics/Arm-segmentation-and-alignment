@@ -24,11 +24,14 @@ Purpose: XML model of j2s7s300 kinova jaco arm
     </asset>
     <worldbody>
     	<body name="root" pos="0 0 0">
-	    <camera name="camera2" mode = "fixed" pos = "-0.02 -0.4270375  0.62" axisangle = " 0 0 1 1.571" fovy = "55.2136" />
-		<camera name="camera3" mode = "fixed" pos = "-0.02 -0.4270375  0.62" axisangle = " 0 0 1 1.571" fovy = "55.2136" />
-<!--             <camera name="camera" pos = "0.4270375 -0.01254375 0.507375" axisangle = " 0 -0.1107235 0.9938512  3.1415" fovy = "45"/> -->
-<!--             <camera name="camera" pos = "-0.03254375 -0.4270375 5" quat = "0 -0.1107182 0.9938043 -0.009718" fovy = "45"/>
-            <camera name="camera" mode = "fixed" pos = "0 0.1 0.1" quat = "0 -90 0 0"/> -->
+<!--	    <camera name="camera2" mode = "fixed" pos = "0.10637142, -0.61207187, 0.50541353" axisangle = "0.04559243  -0.04382234 0.99799846  0"/>-->
+<!--	    <camera name="camera2" mode = "fixed" pos = "0.11482097 -0.6344215  0.95" axisangle = " -0.01753342 0.10228925 0.99460017 0.05" fovy = "55.213"/>-->
+			<camera name="camera2" mode = "fixed" pos = "0.08544628 -0.50222722  0.57" axisangle = " 0.01753342 -0.10228925 0.99460017 0.02" fovy = "55.213"/>
+<!--		<camera name="camera2" mode = "fixed" pos = "0.10544628 -0.52222722  0.65" axisangle = " 0.01753342 -0.10228925 0.99460017 0.02" fovy = "55.213"/>
+<!--		<camera name="camera_of_video_set_1" mode = "fixed" pos = "-0.02 -0.4270375  0.62" axisangle = " 0 0 1 1.571" fovy = "55.2136" /> -->
+<!--             <camera name="camera" pos = "0.4270375 -0.01254375 0.507375" axisangle = " -0.04441591  0.0427079  -0.99809983  3.1415" fovy = "45"/> -->
+<!--             <camera name="camera" pos = "-0.03254375 -0.4270375 0.65" quat = "0.04559243  -0.04382234 0.99799846 0" fovy = "45"/>
+            <camera name="camera" mode = "fixed" pos = "0.025 -0.525 1" quat = "0 -90 0 0"/> -->
 
             <inertial pos="0 0 0" mass="0.001" diaginertia="1.66667e-08 1.66667e-08 1.66667e-08" />
             <geom size="0.005 0.005 0.005" type="box" />
@@ -138,11 +141,20 @@ Purpose: XML model of j2s7s300 kinova jaco arm
 				</body>    		
     		</body>
     	</body>
-<!--
-		<body name="ground" pos="0 -0.5 -0.1">
-			<geom condim="3" size="0.5 0.3 0.0002" rgba="1 1 0.8 1" type="plane"/>
+
+<!--			<body name="ground" pos="0.025 -0.525 0">
+			<geom condim="3" size="0.5 0.5 0.0002" rgba="1 0 0.8 1" type="plane"/>
+		</body>-->
+<!--		<body name="MarkerLF" pos="0.31033805 -0.25593248 0.003613468">
+			<geom name="MarkerLF" size="0.036 0.036 0.0002" rgba="1 1 0.8 1" type="box"/>
 		</body>
--->
+		<body name="MarkerRF" pos="-0.28770491 -0.29742986 0.001063592">
+			<geom name="MarkerRF" size="0.036 0.036 0.0002" rgba="0 0 0.8 1" type="box"/>
+		</body>
+		<body name="MarkerC" pos="0.02592454 -0.52599322 0.0035">
+			<geom name="MarkerC" size="0.036 0.036 0.0002" rgba="0 0.5 0.5 1" type="box"/>
+		</body>-->
+
 <!--		<body name="cube" pos="0.5 0.0 0.0375">
 			<joint type="free"/>
 			<geom name="cube" mass="0.0884" size="0.0375 0.0375 0.0375" rgba="1 0 0 1" type="box"/> 
