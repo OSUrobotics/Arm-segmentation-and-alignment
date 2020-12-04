@@ -1,3 +1,3 @@
-Still doing the code cleaning. If you have any suggestion please contact me
+If you have any suggestion please contact me
 
-Just re-organize all the file
+Uploading new video set for the segmentation and using another method to define the camera pose
